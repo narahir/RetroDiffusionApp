@@ -63,12 +63,37 @@ struct PixelateView: View {
                                 action: pixelateImage
                             )
                         }
+
+                        Button(action: clearSelection) {
+                            Label("Select another photo", systemImage: "photo.badge.plus")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.red)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .padding(.horizontal)
                     } else {
                         PhotoPickerView(selectedItem: $selectedItem)
                     }
                 }
             }
             .navigationTitle("Pixelate")
+            .toolbar {
+                if let pixelatedImage = pixelatedImage {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ShareLink(
+                            item: Image(uiImage: pixelatedImage),
+                            preview: SharePreview(
+                                "Pixelated Image",
+                                image: Image(uiImage: pixelatedImage)
+                            )
+                        ) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                }
+            }
             .onChange(of: selectedItem) { oldValue, newValue in
                 Task {
                     await loadImage(from: newValue)
@@ -144,6 +169,14 @@ struct PixelateView: View {
                 }
             }
         }
+    }
+
+    private func clearSelection() {
+        selectedImage = nil
+        pixelatedImage = nil
+        selectedItem = nil
+        cost = nil
+        checkingCost = false
     }
 }
 
