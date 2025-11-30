@@ -7,11 +7,10 @@
 
 import UIKit
 
-actor ImageUtils {
-
+struct ImageUtils {
     /// Resizes an image to fit within the specified maximum dimension while maintaining aspect ratio.
-    /// Heavy work runs on this actor to keep it off the main thread.
-    func resizeImage(_ image: UIImage, maxDimension: Int) -> UIImage {
+    /// Stateless utility to avoid cross-actor hops; call from a background task when doing heavy work.
+    nonisolated func resizeImage(_ image: UIImage, maxDimension: Int) -> UIImage {
         let size = image.size
         let maxSize = max(size.width, size.height)
 
@@ -32,8 +31,7 @@ actor ImageUtils {
     }
 
     /// Converts a UIImage to a base64-encoded RGB string (removes transparency).
-    /// Runs in the image processing actor to avoid doing the work on the main thread.
-    func imageToBase64RGB(_ image: UIImage) -> String? {
+    nonisolated func imageToBase64RGB(_ image: UIImage) -> String? {
         guard let cgImage = image.cgImage else { return nil }
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()

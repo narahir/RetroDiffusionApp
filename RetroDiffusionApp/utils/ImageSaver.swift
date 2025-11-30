@@ -8,7 +8,7 @@
 import UIKit
 import Photos
 
-actor ImageSaver {
+final class ImageSaver {
     enum SaveError: LocalizedError, Sendable {
         case unauthorized
         case saveFailed(String)

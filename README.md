@@ -47,10 +47,10 @@ A SwiftUI iOS app for generating and pixelating images using the RetroDiffusion 
 
 ## Architecture
 
-- **Swift 6.2 Concurrency**: Heavy work runs on dedicated actors (networking, image processing, library store)
-- **Actor-backed services**:
+- **Swift 6.2 Concurrency**: Heavy work runs on dedicated actors where stateful isolation is needed
+- **Services**:
   - `Networking` actor for API calls, wrapped by a `NetworkClient` (`@MainActor @Observable`) for SwiftUI
-  - `ImageUtils` and `ImageSaver` actors to keep CPU and Photos writes off the main thread
+  - `ImageUtils` and `ImageSaver` stateless utilities used from background tasks to keep CPU and Photos writes off the main thread without cross-actor hops
   - `LibraryStore` actor backed by SQLite for scalable persistence; `LibraryClient` (`@MainActor @Observable`) handles paging and caching for the UI
 - **SwiftUI + @Observable**: Environment-injected clients; UI state remains local to views where possible
 - **Component-Based UI**: Reusable SwiftUI components for generation, pixelation, library, and shared controls
@@ -70,9 +70,11 @@ RetroDiffusionApp/
 │
 ├── actors/                       # Actor-backed services (concurrency-safe)
 │   ├── Networking.swift          # Networking actor
-│   ├── ImageUtils.swift          # Image resizing/base64 actor
-│   ├── ImageSaver.swift          # Photo library saver actor
 │   └── LibraryStore.swift        # SQLite-backed library actor
+│
+├── utils/                        # Utilities
+│   ├── ImageUtils.swift          # Image resizing/base64 utilities
+│   └── ImageSaver.swift          # Photo library saver utilities
 │
 ├── library/                      # Library UI + client
 │   ├── LibraryClient.swift       # @MainActor wrapper for paging/caching over LibraryStore
