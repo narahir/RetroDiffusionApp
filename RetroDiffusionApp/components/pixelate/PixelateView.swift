@@ -5,115 +5,116 @@
 //  Created by Thomas Ricouard on 29/11/25.
 //
 
-import SwiftUI
 import PhotosUI
+import SwiftUI
 
 struct PixelateView: View {
-    @Environment(NetworkClient.self) private var networking
-    @Environment(GenerationQueue.self) private var generationQueue
+  @Environment(NetworkClient.self) private var networking
+  @Environment(GenerationQueue.self) private var generationQueue
 
-    @State private var selectedItem: PhotosPickerItem?
-    @State private var selectedImage: UIImage?
-    @State private var cost: Double?
-    @State private var checkingCost = false
+  @State private var selectedItem: PhotosPickerItem?
+  @State private var selectedImage: UIImage?
+  @State private var cost: Double?
+  @State private var checkingCost = false
 
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let selectedImage = selectedImage {
-                        ImageDisplayView(
-                            title: "Original Image",
-                            image: selectedImage,
-                            maxHeight: 300
-                        )
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        VStack(spacing: 20) {
+          if let selectedImage = selectedImage {
+            ImageDisplayView(
+              title: "Original Image",
+              image: selectedImage,
+              maxHeight: 300
+            )
 
-                        CostPreviewView(cost: cost, checkingCost: checkingCost)
+            CostPreviewView(cost: cost, checkingCost: checkingCost)
 
-                        PrimaryButton(
-                            title: "Pixelate Image",
-                            icon: "sparkles",
-                            action: pixelateImage
-                        )
+            PrimaryButton(
+              title: "Pixelate Image",
+              icon: "sparkles",
+              action: pixelateImage
+            )
 
-                        Button(action: clearSelection) {
-                            Label("Select another photo", systemImage: "photo.badge.plus")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.red)
-                                .foregroundColor(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .padding(.horizontal)
-                    } else {
-                        PhotoPickerView(selectedItem: $selectedItem)
-                    }
-                }
+            Button(action: clearSelection) {
+              Label("Select another photo", systemImage: "photo.badge.plus")
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .navigationTitle("Pixelate")
-            .onChange(of: selectedItem) { oldValue, newValue in
-                Task {
-                    await loadImage(from: newValue)
-                }
-            }
+            .padding(.horizontal)
+          } else {
+            PhotoPickerView(selectedItem: $selectedItem)
+          }
         }
+      }
+      .navigationTitle("Pixelate")
+      .onChange(of: selectedItem) { oldValue, newValue in
+        Task {
+          await loadImage(from: newValue)
+        }
+      }
+    }
+  }
+
+  private func loadImage(from item: PhotosPickerItem?) async {
+    guard let item = item else { return }
+
+    guard let data = try? await item.loadTransferable(type: Data.self),
+      let image = UIImage(data: data)
+    else {
+      return
     }
 
-    private func loadImage(from item: PhotosPickerItem?) async {
-        guard let item = item else { return }
-
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else {
-            return
-        }
-
-        await MainActor.run {
-            selectedImage = image
-            cost = nil
-        }
-
-        await checkCost(for: image)
+    await MainActor.run {
+      selectedImage = image
+      cost = nil
     }
 
-    private func checkCost(for image: UIImage) async {
-        await MainActor.run {
-            checkingCost = true
-        }
+    await checkCost(for: image)
+  }
 
-        do {
-            let costValue = try await networking.checkPixelateCost(image)
-            await MainActor.run {
-                cost = costValue
-                checkingCost = false
-            }
-        } catch {
-            await MainActor.run {
-                checkingCost = false
-                print("Failed to check cost: \(error)")
-            }
-        }
+  private func checkCost(for image: UIImage) async {
+    await MainActor.run {
+      checkingCost = true
     }
 
-    private func pixelateImage() {
-        guard let image = selectedImage else { return }
-
-        generationQueue.enqueuePixelate(image: image)
-
-        selectedImage = nil
-        selectedItem = nil
-        cost = nil
-    }
-
-    private func clearSelection() {
-        selectedImage = nil
-        selectedItem = nil
-        cost = nil
+    do {
+      let costValue = try await networking.checkPixelateCost(image)
+      await MainActor.run {
+        cost = costValue
         checkingCost = false
+      }
+    } catch {
+      await MainActor.run {
+        checkingCost = false
+        print("Failed to check cost: \(error)")
+      }
     }
+  }
+
+  private func pixelateImage() {
+    guard let image = selectedImage else { return }
+
+    generationQueue.enqueuePixelate(image: image)
+
+    selectedImage = nil
+    selectedItem = nil
+    cost = nil
+  }
+
+  private func clearSelection() {
+    selectedImage = nil
+    selectedItem = nil
+    cost = nil
+    checkingCost = false
+  }
 }
 
 #Preview {
-    PixelateView()
-        .environment(NetworkClient())
-        .environment(GenerationQueue())
+  PixelateView()
+    .environment(NetworkClient())
+    .environment(GenerationQueue())
 }

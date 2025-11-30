@@ -8,42 +8,42 @@
 import SwiftUI
 
 struct SaveImageButton: View {
-    let image: UIImage
-    let onSaveSuccess: () -> Void
-    let onSaveError: (String) -> Void
-    private let saver = ImageSaver()
+  let image: UIImage
+  let onSaveSuccess: () -> Void
+  let onSaveError: (String) -> Void
+  private let saver = ImageSaver()
 
-    var body: some View {
-        Button(action: { saveImage() }) {
-            Label("Save to Photos", systemImage: "square.and.arrow.down")
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor.opacity(0.1))
-                .foregroundColor(.accentColor)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .padding(.horizontal)
+  var body: some View {
+    Button(action: { saveImage() }) {
+      Label("Save to Photos", systemImage: "square.and.arrow.down")
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color.accentColor.opacity(0.1))
+        .foregroundColor(.accentColor)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+    .padding(.horizontal)
+  }
 
-    private func saveImage() {
-        Task(priority: .userInitiated) {
-            let result = await saver.save(image: image)
-            await MainActor.run {
-                switch result {
-                case .success:
-                    onSaveSuccess()
-                case .failure(let error):
-                    onSaveError(error.localizedDescription)
-                }
-            }
+  private func saveImage() {
+    Task(priority: .userInitiated) {
+      let result = await saver.save(image: image)
+      await MainActor.run {
+        switch result {
+        case .success:
+          onSaveSuccess()
+        case .failure(let error):
+          onSaveError(error.localizedDescription)
         }
+      }
     }
+  }
 }
 
 #Preview {
-    SaveImageButton(
-        image: UIImage(systemName: "photo")!,
-        onSaveSuccess: {},
-        onSaveError: { _ in }
-    )
+  SaveImageButton(
+    image: UIImage(systemName: "photo")!,
+    onSaveSuccess: {},
+    onSaveError: { _ in }
+  )
 }

@@ -8,21 +8,21 @@
 import SwiftUI
 
 struct PromptInputView: View {
-    @Binding var prompt: String
+  @Binding var prompt: String
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Prompt")
-                .font(.headline)
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Prompt")
+        .font(.headline)
 
-            TextField("Enter your prompt...", text: $prompt, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(3...6)
-        }
-        .padding(.horizontal)
+      TextField("Enter your prompt...", text: $prompt, axis: .vertical)
+        .textFieldStyle(.roundedBorder)
+        .lineLimit(3...6)
     }
+    .padding(.horizontal)
+  }
 }
 
 #Preview {
-    PromptInputView(prompt: .constant(""))
+  PromptInputView(prompt: .constant(""))
 }

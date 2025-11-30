@@ -8,39 +8,39 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @Environment(GenerationQueue.self) private var generationQueue
+  @Environment(GenerationQueue.self) private var generationQueue
 
-    var body: some View {
-        TabView {
-            PixelateView()
-                .tabItem {
-                    Label("Pixelate", systemImage: "photo.artframe")
-                }
-
-            GenerateView()
-                .tabItem {
-                    Label("Generate", systemImage: "sparkles")
-                }
-
-            LibraryView()
-                .tabItem {
-                    Label("Library", systemImage: "photo.on.rectangle")
-                }
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
-                }
+  var body: some View {
+    TabView {
+      PixelateView()
+        .tabItem {
+          Label("Pixelate", systemImage: "photo.artframe")
         }
-        .tabViewBottomAccessory {
-            QueueAccessoryView()
+
+      GenerateView()
+        .tabItem {
+          Label("Generate", systemImage: "sparkles")
+        }
+
+      LibraryView()
+        .tabItem {
+          Label("Library", systemImage: "photo.on.rectangle")
+        }
+
+      SettingsView()
+        .tabItem {
+          Label("Settings", systemImage: "gearshape")
         }
     }
+    .tabViewBottomAccessory {
+      QueueAccessoryView()
+    }
+  }
 }
 
 #Preview {
-    MainTabView()
-        .environment(NetworkClient())
-        .environment(LibraryClient())
-        .environment(GenerationQueue())
+  MainTabView()
+    .environment(NetworkClient())
+    .environment(LibraryClient())
+    .environment(GenerationQueue())
 }
