@@ -7,6 +7,22 @@
 
 import Foundation
 
+enum ModelCategory: String, CaseIterable, Identifiable {
+    case rdPro = "rd_pro"
+    case rdFast = "rd_fast"
+    case rdPlus = "rd_plus"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .rdPro: return "RD Pro"
+        case .rdFast: return "RD Fast"
+        case .rdPlus: return "RD Plus"
+        }
+    }
+}
+
 enum RetroDiffusionModel: String, CaseIterable, Identifiable {
     case rdProDefault = "rd_pro__default"
     case rdProPainterly = "rd_pro__painterly"
@@ -55,6 +71,26 @@ enum RetroDiffusionModel: String, CaseIterable, Identifiable {
     case rdPlusLowRes = "rd_plus__low_res"
 
     var id: String { rawValue }
+
+    var category: ModelCategory {
+        if rawValue.hasPrefix("rd_pro") {
+            return .rdPro
+        } else if rawValue.hasPrefix("rd_fast") {
+            return .rdFast
+        } else if rawValue.hasPrefix("rd_plus") {
+            return .rdPlus
+        }
+        return .rdFast
+    }
+
+    var shortDisplayName: String {
+        let parts = displayName.components(separatedBy: " - ")
+        return parts.count > 1 ? parts[1] : displayName
+    }
+
+    static func models(for category: ModelCategory) -> [RetroDiffusionModel] {
+        allCases.filter { $0.category == category }
+    }
 
     var displayName: String {
         switch self {

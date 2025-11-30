@@ -10,6 +10,7 @@ import SwiftUI
 struct GenerateView: View {
     @Environment(Networking.self) private var networking
 
+    @State private var selectedCategory: ModelCategory = .rdFast
     @State private var selectedModel: RetroDiffusionModel = .rdFastDefault
     @State private var prompt: String = ""
     @State private var generatedImage: UIImage?
@@ -23,55 +24,145 @@ struct GenerateView: View {
     @State private var saveErrorMessage: String?
     @State private var costCheckTask: Task<Void, Never>?
 
+    private var availableModels: [RetroDiffusionModel] {
+        RetroDiffusionModel.models(for: selectedCategory)
+    }
+
+    private var minSize: Int {
+        Constants.SizeConstraints.minSize
+    }
+
+    private var maxSize: Int {
+        Constants.SizeConstraints.maxSize
+    }
+
+    private func clampSize(_ value: Int) -> Int {
+        max(minSize, min(value, maxSize))
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    ModelPickerView(selectedModel: $selectedModel)
-                    PromptInputView(prompt: $prompt)
-                    SizeControlsView(width: $width, height: $height)
-
-                    if !prompt.isEmpty {
-                        CostPreviewView(cost: cost, checkingCost: checkingCost)
-
-                        PrimaryButton(
-                            title: "Generate Image",
-                            icon: "sparkles",
-                            action: generateImage,
-                            isDisabled: networking.isLoading
-                        )
-                    }
-
-                    if networking.isLoading {
-                        ProgressView("Generating image...")
-                            .padding()
-                    }
-
-                    if let generatedImage = generatedImage {
-                        VStack(spacing: 16) {
-                            ImageDisplayView(
-                                title: "Generated Image",
-                                image: generatedImage,
-                                maxHeight: 400
-                            )
-
-                            SaveImageButton(
-                                image: generatedImage,
-                                onSaveSuccess: { showingSaveSuccess = true },
-                                onSaveError: { error in
-                                    saveErrorMessage = error
-                                    showingSaveError = true
-                                }
-                            )
+            Form {
+                Section("Model") {
+                    Picker("Model Category", selection: $selectedCategory) {
+                        ForEach(ModelCategory.allCases) { category in
+                            Text(category.displayName).tag(category)
                         }
-                    } else if !networking.isLoading && prompt.isEmpty {
-                        EmptyStateView(
-                            icon: "sparkles",
-                            message: "Enter a prompt and select a model style to generate pixel art"
-                        )
+                    }
+
+                    Picker("Model Style", selection: $selectedModel) {
+                        ForEach(availableModels) { model in
+                            Text(model.shortDisplayName).tag(model)
+                        }
                     }
                 }
-                .padding(.vertical)
+
+                Section("Prompt") {
+                    TextField("Enter your prompt...", text: $prompt, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+
+                Section("Size") {
+                    LabeledContent("Width") {
+                        TextField("256", value: $width, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+
+                    LabeledContent("Height") {
+                        TextField("256", value: $height, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+
+                    LabeledContent("Range") {
+                        Text("\(minSize)-\(maxSize)")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+
+                if !prompt.isEmpty {
+                    Section {
+                        if let cost = cost {
+                            HStack {
+                                Image(systemName: "creditcard")
+                                    .foregroundColor(.secondary)
+                                Text("Cost: \(cost, specifier: "%.2f") credits")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        } else if checkingCost {
+                            HStack {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("Checking cost...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Button(action: generateImage) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                Text("Generate Image")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .disabled(networking.isLoading)
+                    }
+                }
+
+                if networking.isLoading {
+                    Section {
+                        HStack {
+                            Spacer()
+                            ProgressView("Generating image...")
+                            Spacer()
+                        }
+                    }
+                }
+
+                if let generatedImage = generatedImage {
+                    Section("Generated Image") {
+                        Image(uiImage: generatedImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 400)
+                            .cornerRadius(8)
+                            .listRowInsets(EdgeInsets())
+
+                        Button(action: {
+                            ImageSaver.save(image: generatedImage) { result in
+                                switch result {
+                                case .success:
+                                    showingSaveSuccess = true
+                                case .failure(let error):
+                                    saveErrorMessage = error.localizedDescription
+                                    showingSaveError = true
+                                }
+                            }
+                        }) {
+                            Label("Save to Photos", systemImage: "square.and.arrow.down")
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                } else if !networking.isLoading && prompt.isEmpty {
+                    Section {
+                        VStack(spacing: 20) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 60))
+                                .foregroundColor(.secondary)
+
+                            Text("Enter a prompt and select a model style to generate pixel art")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                    }
+                }
             }
             .navigationTitle("Generate")
             .alert("Error", isPresented: $showingError) {
@@ -98,17 +189,34 @@ struct GenerateView: View {
                     checkingCost = false
                 }
             }
+            .onChange(of: selectedCategory) { oldValue, newValue in
+                let models = RetroDiffusionModel.models(for: newValue)
+                if let firstModel = models.first {
+                    selectedModel = firstModel
+                }
+                if !prompt.isEmpty {
+                    debouncedCheckCost()
+                }
+            }
             .onChange(of: selectedModel) { oldValue, newValue in
                 if !prompt.isEmpty {
                     debouncedCheckCost()
                 }
             }
             .onChange(of: width) { oldValue, newValue in
+                let clampedValue = clampSize(newValue)
+                if clampedValue != newValue {
+                    width = clampedValue
+                }
                 if !prompt.isEmpty {
                     debouncedCheckCost()
                 }
             }
             .onChange(of: height) { oldValue, newValue in
+                let clampedValue = clampSize(newValue)
+                if clampedValue != newValue {
+                    height = clampedValue
+                }
                 if !prompt.isEmpty {
                     debouncedCheckCost()
                 }
@@ -135,6 +243,9 @@ struct GenerateView: View {
     private func checkCost() async {
         guard !prompt.isEmpty else { return }
 
+        let validWidth = clampSize(width)
+        let validHeight = clampSize(height)
+
         await MainActor.run {
             checkingCost = true
         }
@@ -143,8 +254,8 @@ struct GenerateView: View {
             let costValue = try await networking.checkGenerateCost(
                 prompt: prompt,
                 style: selectedModel,
-                width: width,
-                height: height
+                width: validWidth,
+                height: validHeight
             )
 
             guard !Task.isCancelled else { return }
@@ -166,13 +277,21 @@ struct GenerateView: View {
     private func generateImage() {
         guard !prompt.isEmpty else { return }
 
+        let validWidth = clampSize(width)
+        let validHeight = clampSize(height)
+
+        if validWidth != width || validHeight != height {
+            width = validWidth
+            height = validHeight
+        }
+
         Task {
             do {
                 let result = try await networking.generateImage(
                     prompt: prompt,
                     style: selectedModel,
-                    width: width,
-                    height: height
+                    width: validWidth,
+                    height: validHeight
                 )
                 await MainActor.run {
                     generatedImage = result
