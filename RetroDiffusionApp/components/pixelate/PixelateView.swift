@@ -9,7 +9,7 @@ import SwiftUI
 import PhotosUI
 
 struct PixelateView: View {
-    @Environment(Networking.self) private var networking
+    @Environment(NetworkClient.self) private var networking
     @Environment(LibraryManager.self) private var libraryManager
     @Environment(GenerationQueue.self) private var generationQueue
 
@@ -115,7 +115,7 @@ struct PixelateView: View {
 
 #Preview {
     PixelateView()
-        .environment(Networking())
+        .environment(NetworkClient())
         .environment(LibraryManager())
         .environment(GenerationQueue())
 }

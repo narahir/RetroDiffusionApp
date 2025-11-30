@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GenerateView: View {
-    @Environment(Networking.self) private var networking
+    @Environment(NetworkClient.self) private var networking
     @Environment(LibraryManager.self) private var libraryManager
     @Environment(GenerationQueue.self) private var generationQueue
 
@@ -246,7 +246,7 @@ struct GenerateView: View {
 
 #Preview {
     GenerateView()
-        .environment(Networking())
+        .environment(NetworkClient())
         .environment(LibraryManager())
         .environment(GenerationQueue())
 }

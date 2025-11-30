@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct RetroDiffusionAppApp: App {
-    @State private var networking = Networking()
+    @State private var networking = NetworkClient()
     @State private var libraryManager = LibraryManager()
     @State private var generationQueue = GenerationQueue()
 
@@ -20,7 +20,7 @@ struct RetroDiffusionAppApp: App {
                 .environment(libraryManager)
                 .environment(generationQueue)
                 .onAppear {
-                    generationQueue.setDependencies(networking: networking, libraryManager: libraryManager)
+                    generationQueue.setDependencies(networkClient: networking, libraryManager: libraryManager)
                 }
         }
     }

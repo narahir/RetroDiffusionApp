@@ -141,7 +141,7 @@ enum RetroDiffusionModel: String, CaseIterable, Identifiable {
     }
 }
 
-struct InferenceRequest: Codable {
+nonisolated struct InferenceRequest: Codable, Sendable {
     let width: Int
     let height: Int
     let prompt: String
@@ -159,7 +159,7 @@ struct InferenceRequest: Codable {
     }
 }
 
-struct InferenceResponse: Codable {
+nonisolated struct InferenceResponse: Codable, Sendable {
     let createdAt: Int
     let creditCost: Int
     let base64Images: [String]
@@ -177,6 +177,6 @@ struct InferenceResponse: Codable {
     }
 }
 
-struct CreditsResponse: Codable {
+nonisolated struct CreditsResponse: Codable, Sendable {
     let credits: Int
 }

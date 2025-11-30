@@ -29,11 +29,11 @@ class GenerationQueue {
         tasks.filter { $0.isFailed }
     }
 
-    private var networking: Networking?
+    private var networkClient: NetworkClient?
     private var libraryManager: LibraryManager?
 
-    func setDependencies(networking: Networking, libraryManager: LibraryManager) {
-        self.networking = networking
+    func setDependencies(networkClient: NetworkClient, libraryManager: LibraryManager) {
+        self.networkClient = networkClient
         self.libraryManager = libraryManager
     }
 
@@ -73,7 +73,7 @@ class GenerationQueue {
     }
 
     private func startTask(_ task: GenerationTask) {
-        guard let networking = networking else {
+        guard let networkClient = networkClient else {
             return
         }
 
@@ -97,7 +97,7 @@ class GenerationQueue {
                           let height = task.height else {
                         throw GenerationQueueError.invalidTaskData
                     }
-                    resultImage = try await networking.generateImage(
+                    resultImage = try await networkClient.generateImage(
                         prompt: prompt,
                         style: model,
                         width: width,
@@ -108,7 +108,7 @@ class GenerationQueue {
                     guard let sourceImage = task.sourceImage else {
                         throw GenerationQueueError.invalidTaskData
                     }
-                    resultImage = try await networking.pixelateImage(sourceImage)
+                    resultImage = try await networkClient.pixelateImage(sourceImage)
                 }
 
                 await markCompleted(id: task.id, image: resultImage)

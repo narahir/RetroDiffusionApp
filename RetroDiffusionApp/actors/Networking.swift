@@ -8,8 +8,7 @@
 import Foundation
 import UIKit
 
-@Observable
-class Networking {
+actor Networking {
     private let baseURL = "https://api.retrodiffusion.ai/v1"
     private var apiKey: String
     private let imageUtils = ImageUtils()
@@ -36,12 +35,21 @@ class Networking {
 
     /// Resolves the API key by checking UserDefaults first, then falling back to Config.plist
     private static func resolveAPIKey() -> String? {
-        if let customKey = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.customAPIKey),
+        if let customKey = UserDefaults.standard.string(forKey: "custom_api_key"),
            !customKey.isEmpty {
             return customKey
         }
 
-        return ConfigLoader.loadAPIKey()
+        return loadAPIKeyFromConfig()
+    }
+
+    private static func loadAPIKeyFromConfig() -> String? {
+        guard let path = Bundle.main.path(forResource: "Config", ofType: "plist"),
+              let plist = NSDictionary(contentsOfFile: path),
+              let apiKey = plist["API_KEY"] as? String else {
+            return nil
+        }
+        return apiKey
     }
 
     func pixelateImage(_ image: UIImage) async throws -> UIImage {

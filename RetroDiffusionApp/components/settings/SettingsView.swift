@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage(Constants.UserDefaultsKeys.customAPIKey) private var customAPIKey: String = ""
-    @Environment(Networking.self) private var networking
+    @Environment(NetworkClient.self) private var networking
 
     var body: some View {
         NavigationStack {
@@ -62,5 +62,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .environment(Networking())
+        .environment(NetworkClient())
 }
