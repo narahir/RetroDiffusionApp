@@ -89,6 +89,19 @@ struct LibraryView: View {
                                                 LibraryThumbnailView(libraryImage: libraryImage)
                                                     .matchedTransitionSource(id: libraryImage.id.uuidString, in: namespace)
                                             }
+                                            .contextMenu {
+                                                if let image = libraryManager.loadImage(for: libraryImage) {
+                                                    ShareLink(item: Image(uiImage: image), preview: SharePreview("Image", image: Image(uiImage: image))) {
+                                                        Label("Share", systemImage: "square.and.arrow.up")
+                                                    }
+                                                }
+
+                                                Button(role: .destructive) {
+                                                    libraryManager.delete(libraryImage)
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                            }
                                         }
                                     }
                                     .padding(.horizontal, 2)
