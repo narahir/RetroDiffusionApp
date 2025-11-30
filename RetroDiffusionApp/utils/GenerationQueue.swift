@@ -37,6 +37,8 @@ class GenerationQueue {
         self.libraryManager = libraryManager
     }
 
+  
+    @discardableResult
     func enqueueGenerate(
         prompt: String,
         model: RetroDiffusionModel,
@@ -57,6 +59,7 @@ class GenerationQueue {
         return task.id
     }
 
+    @discardableResult
     func enqueuePixelate(image: UIImage) -> UUID {
         let task = GenerationTask(
             type: .pixelate,
