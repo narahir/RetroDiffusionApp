@@ -13,9 +13,6 @@ class Networking {
     private let baseURL = "https://api.retrodiffusion.ai/v1"
     private var apiKey: String
 
-    var isLoading = false
-    var errorMessage: String?
-
     init() {
         guard let resolvedKey = Self.resolveAPIKey() else {
             fatalError("API_KEY not found. Please set a custom API key in Settings or create Config.plist with API_KEY.")
@@ -47,9 +44,6 @@ class Networking {
     }
 
     func pixelateImage(_ image: UIImage) async throws -> UIImage {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
 
         print("🔵 [Pixelate] Starting pixelation")
         print("🔵 [Pixelate] Original image size: \(image.size.width)x\(image.size.height)")
@@ -130,9 +124,6 @@ class Networking {
         width: Int = 256,
         height: Int = 256
     ) async throws -> UIImage {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
 
         let request = InferenceRequest(
             width: width,

@@ -11,16 +11,13 @@ import PhotosUI
 struct PixelateView: View {
     @Environment(Networking.self) private var networking
     @Environment(LibraryManager.self) private var libraryManager
+    @Environment(GenerationQueue.self) private var generationQueue
 
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
-    @State private var pixelatedImage: UIImage?
-    @State private var showingError = false
     @State private var cost: Double?
     @State private var checkingCost = false
-    @State private var showingSaveSuccess = false
-    @State private var showingSaveError = false
-    @State private var saveErrorMessage: String?
+    @State private var showingEnqueueSuccess = false
 
     var body: some View {
         NavigationStack {
@@ -33,37 +30,13 @@ struct PixelateView: View {
                             maxHeight: 300
                         )
 
-                        if let pixelatedImage = pixelatedImage {
-                            VStack(spacing: 16) {
-                                ImageDisplayView(
-                                    title: "Pixelated Image",
-                                    image: pixelatedImage,
-                                    maxHeight: 300
-                                )
-
-                                SaveImageButton(
-                                    image: pixelatedImage,
-                                    onSaveSuccess: { showingSaveSuccess = true },
-                                    onSaveError: { error in
-                                        saveErrorMessage = error
-                                        showingSaveError = true
-                                    }
-                                )
-                            }
-                        }
-
                         CostPreviewView(cost: cost, checkingCost: checkingCost)
 
-                        if networking.isLoading {
-                            ProgressView("Pixelating image...")
-                                .padding()
-                        } else if pixelatedImage == nil {
-                            PrimaryButton(
-                                title: "Pixelate Image",
-                                icon: "sparkles",
-                                action: pixelateImage
-                            )
-                        }
+                        PrimaryButton(
+                            title: "Pixelate Image",
+                            icon: "sparkles",
+                            action: pixelateImage
+                        )
 
                         Button(action: clearSelection) {
                             Label("Select another photo", systemImage: "photo.badge.plus")
@@ -80,40 +53,15 @@ struct PixelateView: View {
                 }
             }
             .navigationTitle("Pixelate")
-            .toolbar {
-                if let pixelatedImage = pixelatedImage {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        ShareLink(
-                            item: Image(uiImage: pixelatedImage),
-                            preview: SharePreview(
-                                "Pixelated Image",
-                                image: Image(uiImage: pixelatedImage)
-                            )
-                        ) {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-                    }
-                }
-            }
             .onChange(of: selectedItem) { oldValue, newValue in
                 Task {
                     await loadImage(from: newValue)
                 }
             }
-            .alert("Error", isPresented: $showingError) {
+            .alert("Queued!", isPresented: $showingEnqueueSuccess) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text(networking.errorMessage ?? "An unknown error occurred")
-            }
-            .alert("Saved!", isPresented: $showingSaveSuccess) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("Image saved to your photo library")
-            }
-            .alert("Save Failed", isPresented: $showingSaveError) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(saveErrorMessage ?? "Failed to save image")
+                Text("Pixelation task has been added to the queue. Check the Library tab to see progress.")
             }
         }
     }
@@ -128,7 +76,6 @@ struct PixelateView: View {
 
         await MainActor.run {
             selectedImage = image
-            pixelatedImage = nil
             cost = nil
         }
 
@@ -157,25 +104,17 @@ struct PixelateView: View {
     private func pixelateImage() {
         guard let image = selectedImage else { return }
 
-        Task {
-            do {
-                let result = try await networking.pixelateImage(image)
-                await MainActor.run {
-                    pixelatedImage = result
-                    libraryManager.save(image: result)
-                }
-            } catch {
-                await MainActor.run {
-                    networking.errorMessage = error.localizedDescription
-                    showingError = true
-                }
-            }
-        }
+        generationQueue.enqueuePixelate(image: image)
+
+        // Clear selection and show success
+        selectedImage = nil
+        selectedItem = nil
+        cost = nil
+        showingEnqueueSuccess = true
     }
 
     private func clearSelection() {
         selectedImage = nil
-        pixelatedImage = nil
         selectedItem = nil
         cost = nil
         checkingCost = false
@@ -185,4 +124,6 @@ struct PixelateView: View {
 #Preview {
     PixelateView()
         .environment(Networking())
+        .environment(LibraryManager())
+        .environment(GenerationQueue())
 }

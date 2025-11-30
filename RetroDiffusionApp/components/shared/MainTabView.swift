@@ -36,4 +36,6 @@ struct MainTabView: View {
 #Preview {
     MainTabView()
         .environment(Networking())
+        .environment(LibraryManager())
+        .environment(GenerationQueue())
 }

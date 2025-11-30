@@ -10,19 +10,16 @@ import SwiftUI
 struct GenerateView: View {
     @Environment(Networking.self) private var networking
     @Environment(LibraryManager.self) private var libraryManager
+    @Environment(GenerationQueue.self) private var generationQueue
 
     @State private var selectedCategory: ModelCategory = .rdFast
     @State private var selectedModel: RetroDiffusionModel = .rdFastDefault
     @State private var prompt: String = ""
-    @State private var generatedImage: UIImage?
-    @State private var showingError = false
     @State private var width: Int = 256
     @State private var height: Int = 256
     @State private var cost: Double?
     @State private var checkingCost = false
-    @State private var showingSaveSuccess = false
-    @State private var showingSaveError = false
-    @State private var saveErrorMessage: String?
+    @State private var showingEnqueueSuccess = false
     @State private var costCheckTask: Task<Void, Never>?
 
     private var availableModels: [RetroDiffusionModel] {
@@ -110,45 +107,10 @@ struct GenerateView: View {
                             }
                             .frame(maxWidth: .infinity)
                         }
-                        .disabled(networking.isLoading)
                     }
                 }
 
-                if networking.isLoading {
-                    Section {
-                        HStack {
-                            Spacer()
-                            ProgressView("Generating image...")
-                            Spacer()
-                        }
-                    }
-                }
-
-                if let generatedImage = generatedImage {
-                    Section("Generated Image") {
-                        Image(uiImage: generatedImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 400)
-                            .cornerRadius(8)
-                            .listRowInsets(EdgeInsets())
-
-                        Button(action: {
-                            ImageSaver.save(image: generatedImage) { result in
-                                switch result {
-                                case .success:
-                                    showingSaveSuccess = true
-                                case .failure(let error):
-                                    saveErrorMessage = error.localizedDescription
-                                    showingSaveError = true
-                                }
-                            }
-                        }) {
-                            Label("Save to Photos", systemImage: "square.and.arrow.down")
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                } else if !networking.isLoading && prompt.isEmpty {
+                if !prompt.isEmpty {
                     Section {
                         VStack(spacing: 20) {
                             Image(systemName: "sparkles")
@@ -166,20 +128,10 @@ struct GenerateView: View {
                 }
             }
             .navigationTitle("Generate")
-            .alert("Error", isPresented: $showingError) {
+            .alert("Queued!", isPresented: $showingEnqueueSuccess) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text(networking.errorMessage ?? "An unknown error occurred")
-            }
-            .alert("Saved!", isPresented: $showingSaveSuccess) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("Image saved to your photo library")
-            }
-            .alert("Save Failed", isPresented: $showingSaveError) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(saveErrorMessage ?? "Failed to save image")
+                Text("Generation task has been added to the queue. Check the Library tab to see progress.")
             }
             .onChange(of: prompt) { oldValue, newValue in
                 if !newValue.isEmpty {
@@ -286,35 +238,23 @@ struct GenerateView: View {
             height = validHeight
         }
 
-        Task {
-            do {
-                let result = try await networking.generateImage(
-                    prompt: prompt,
-                    style: selectedModel,
-                    width: validWidth,
-                    height: validHeight
-                )
-                await MainActor.run {
-                    generatedImage = result
-                    libraryManager.save(
-                        image: result,
-                        prompt: prompt,
-                        model: selectedModel.rawValue,
-                        width: validWidth,
-                        height: validHeight
-                    )
-                }
-            } catch {
-                await MainActor.run {
-                    networking.errorMessage = error.localizedDescription
-                    showingError = true
-                }
-            }
-        }
+        generationQueue.enqueueGenerate(
+            prompt: prompt,
+            model: selectedModel,
+            width: validWidth,
+            height: validHeight
+        )
+
+        // Clear form and show success
+        prompt = ""
+        cost = nil
+        showingEnqueueSuccess = true
     }
 }
 
 #Preview {
     GenerateView()
         .environment(Networking())
+        .environment(LibraryManager())
+        .environment(GenerationQueue())
 }
