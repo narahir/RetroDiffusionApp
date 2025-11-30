@@ -8,8 +8,8 @@
 import UIKit
 import Photos
 
-enum ImageSaver {
-    enum SaveError: LocalizedError {
+actor ImageSaver {
+    enum SaveError: LocalizedError, Sendable {
         case unauthorized
         case saveFailed(String)
 
@@ -23,26 +23,46 @@ enum ImageSaver {
         }
     }
 
-    enum SaveResult {
+    enum SaveResult: Sendable {
         case success
         case failure(SaveError)
     }
 
-    static func save(image: UIImage, completion: @escaping (SaveResult) -> Void) {
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            guard status == .authorized || status == .limited else {
-                completion(.failure(.unauthorized))
-                return
-            }
+    func save(image: UIImage) async -> SaveResult {
+        let status = await requestAuthorization()
+        guard status == .authorized || status == .limited else {
+            return .failure(.unauthorized)
+        }
 
+        do {
+            try await performSave(image: image)
+            return .success
+        } catch let error as SaveError {
+            return .failure(error)
+        } catch {
+            return .failure(.saveFailed(error.localizedDescription))
+        }
+    }
+
+    private func requestAuthorization() async -> PHAuthorizationStatus {
+        await withCheckedContinuation { continuation in
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                continuation.resume(returning: status)
+            }
+        }
+    }
+
+    private func performSave(image: UIImage) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             PHPhotoLibrary.shared().performChanges({
                 PHAssetChangeRequest.creationRequestForAsset(from: image)
             }) { success, error in
-                if success {
-                    completion(.success)
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if success {
+                    continuation.resume(returning: ())
                 } else {
-                    let errorMessage = error?.localizedDescription ?? "Failed to save image"
-                    completion(.failure(.saveFailed(errorMessage)))
+                    continuation.resume(throwing: SaveError.saveFailed("Failed to save image"))
                 }
             }
         }

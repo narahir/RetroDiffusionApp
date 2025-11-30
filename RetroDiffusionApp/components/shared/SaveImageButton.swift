@@ -11,6 +11,7 @@ struct SaveImageButton: View {
     let image: UIImage
     let onSaveSuccess: () -> Void
     let onSaveError: (String) -> Void
+    private let saver = ImageSaver()
 
     var body: some View {
         Button(action: { saveImage() }) {
@@ -25,12 +26,15 @@ struct SaveImageButton: View {
     }
 
     private func saveImage() {
-        ImageSaver.save(image: image) { result in
-            switch result {
-            case .success:
-                onSaveSuccess()
-            case .failure(let error):
-                onSaveError(error.localizedDescription)
+        Task(priority: .userInitiated) {
+            let result = await saver.save(image: image)
+            await MainActor.run {
+                switch result {
+                case .success:
+                    onSaveSuccess()
+                case .failure(let error):
+                    onSaveError(error.localizedDescription)
+                }
             }
         }
     }

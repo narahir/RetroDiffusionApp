@@ -7,52 +7,46 @@
 
 import UIKit
 
-enum ImageUtils {
+actor ImageUtils {
+
     /// Resizes an image to fit within the specified maximum dimension while maintaining aspect ratio.
-    /// - Parameters:
-    ///   - image: The image to resize
-    ///   - maxDimension: The maximum width or height (whichever is larger)
-    /// - Returns: The resized image, or the original image if it's already smaller than maxDimension
-    static func resizeImage(_ image: UIImage, maxDimension: Int) -> UIImage {
+    /// Heavy work runs on this actor to keep it off the main thread.
+    func resizeImage(_ image: UIImage, maxDimension: Int) -> UIImage {
         let size = image.size
         let maxSize = max(size.width, size.height)
 
-        // If image is already smaller than maxDimension, return as-is
         guard maxSize > CGFloat(maxDimension) else {
             return image
         }
 
-        // Calculate new size maintaining aspect ratio
         let scale = CGFloat(maxDimension) / maxSize
-        let newWidth = size.width * scale
-        let newHeight = size.height * scale
-        let newSize = CGSize(width: newWidth, height: newHeight)
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
 
-        // Resize the image
-        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-        defer { UIGraphicsEndImageContext() }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
 
-        image.draw(in: CGRect(origin: .zero, size: newSize))
-        return UIGraphicsGetImageFromCurrentImageContext() ?? image
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
 
     /// Converts a UIImage to a base64-encoded RGB string (removes transparency).
-    /// - Parameter image: The image to convert
-    /// - Returns: A base64-encoded string of the RGB image, or nil if conversion fails
-    static func imageToBase64RGB(_ image: UIImage) -> String? {
-        // Convert to RGB (remove transparency)
+    /// Runs in the image processing actor to avoid doing the work on the main thread.
+    func imageToBase64RGB(_ image: UIImage) -> String? {
         guard let cgImage = image.cgImage else { return nil }
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let width = cgImage.width
         let height = cgImage.height
+        let bytesPerRow = width * 4
 
         guard let context = CGContext(
             data: nil,
             width: width,
             height: height,
             bitsPerComponent: 8,
-            bytesPerRow: width * 4,
+            bytesPerRow: bytesPerRow,
             space: colorSpace,
             bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
         ) else {

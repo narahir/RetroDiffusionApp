@@ -12,6 +12,7 @@ import UIKit
 class Networking {
     private let baseURL = "https://api.retrodiffusion.ai/v1"
     private var apiKey: String
+    private let imageUtils = ImageUtils()
 
     init() {
         guard let resolvedKey = Self.resolveAPIKey() else {
@@ -49,11 +50,11 @@ class Networking {
         print("🔵 [Pixelate] Original image size: \(image.size.width)x\(image.size.height)")
 
         // Resize image to fit within API limits (max 256x256)
-        let resizedImage = ImageUtils.resizeImage(image, maxDimension: 256)
+        let resizedImage = await imageUtils.resizeImage(image, maxDimension: 256)
         print("🔵 [Pixelate] Resized image size: \(resizedImage.size.width)x\(resizedImage.size.height)")
 
         // Convert UIImage to base64 RGB (no transparency)
-        guard let base64Image = ImageUtils.imageToBase64RGB(resizedImage) else {
+        guard let base64Image = await imageUtils.imageToBase64RGB(resizedImage) else {
             print("❌ [Pixelate] Failed to convert image to base64")
             throw NetworkingError.imageConversionFailed
         }
@@ -168,10 +169,10 @@ class Networking {
 
     func checkPixelateCost(_ image: UIImage) async throws -> Double {
         // Resize image to fit within API limits (max 256x256)
-        let resizedImage = ImageUtils.resizeImage(image, maxDimension: 256)
+        let resizedImage = await imageUtils.resizeImage(image, maxDimension: 256)
 
         // Convert UIImage to base64 RGB (no transparency)
-        guard let base64Image = ImageUtils.imageToBase64RGB(resizedImage) else {
+        guard let base64Image = await imageUtils.imageToBase64RGB(resizedImage) else {
             throw NetworkingError.imageConversionFailed
         }
 
