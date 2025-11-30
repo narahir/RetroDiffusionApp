@@ -41,7 +41,6 @@ class LibraryManager {
         libraryDirectory = documentsPath.appendingPathComponent("Library", isDirectory: true)
         metadataFile = libraryDirectory.appendingPathComponent("metadata.json")
 
-        // Create library directory if it doesn't exist
         try? FileManager.default.createDirectory(at: libraryDirectory, withIntermediateDirectories: true)
 
         loadMetadata()

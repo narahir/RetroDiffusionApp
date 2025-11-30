@@ -296,7 +296,6 @@ struct GenerateView: View {
                 )
                 await MainActor.run {
                     generatedImage = result
-                    // Automatically save to library
                     libraryManager.save(
                         image: result,
                         prompt: prompt,

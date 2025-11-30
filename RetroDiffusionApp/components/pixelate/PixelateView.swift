@@ -10,6 +10,7 @@ import PhotosUI
 
 struct PixelateView: View {
     @Environment(Networking.self) private var networking
+    @Environment(LibraryManager.self) private var libraryManager
 
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
@@ -161,6 +162,7 @@ struct PixelateView: View {
                 let result = try await networking.pixelateImage(image)
                 await MainActor.run {
                     pixelatedImage = result
+                    libraryManager.save(image: result)
                 }
             } catch {
                 await MainActor.run {
