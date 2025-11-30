@@ -20,6 +20,11 @@ struct MainTabView: View {
                     Label("Generate", systemImage: "sparkles")
                 }
 
+            LibraryView()
+                .tabItem {
+                    Label("Library", systemImage: "photo.on.rectangle")
+                }
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")

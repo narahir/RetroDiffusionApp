@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GenerateView: View {
     @Environment(Networking.self) private var networking
+    @Environment(LibraryManager.self) private var libraryManager
 
     @State private var selectedCategory: ModelCategory = .rdFast
     @State private var selectedModel: RetroDiffusionModel = .rdFastDefault
@@ -295,6 +296,14 @@ struct GenerateView: View {
                 )
                 await MainActor.run {
                     generatedImage = result
+                    // Automatically save to library
+                    libraryManager.save(
+                        image: result,
+                        prompt: prompt,
+                        model: selectedModel.rawValue,
+                        width: validWidth,
+                        height: validHeight
+                    )
                 }
             } catch {
                 await MainActor.run {
