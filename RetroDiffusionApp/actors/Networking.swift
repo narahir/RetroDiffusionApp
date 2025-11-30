@@ -58,18 +58,24 @@ actor Networking {
         print("🔵 [Pixelate] Original image size: \(image.size.width)x\(image.size.height)")
 
         // Resize image to fit within API limits (max 256x256)
-        let resizedImage = imageUtils.resizeImage(image, maxDimension: 256)
+        let resizedImage = await Task.detached(priority: .userInitiated) {
+            ImageUtils().resizeImage(image, maxDimension: 256)
+        }.value
         print("🔵 [Pixelate] Resized image size: \(resizedImage.size.width)x\(resizedImage.size.height)")
 
         // Convert UIImage to base64 RGB (no transparency)
-        guard let base64Image = imageUtils.imageToBase64RGB(resizedImage) else {
+        let base64Image = await Task.detached(priority: .utility) {
+            ImageUtils().imageToBase64RGB(resizedImage)
+        }.value
+        guard let base64Image else {
             print("❌ [Pixelate] Failed to convert image to base64")
             throw NetworkingError.imageConversionFailed
         }
 
         let base64Length = base64Image.count
+      
         print("🔵 [Pixelate] Base64 image length: \(base64Length) characters (~\(base64Length * 3 / 4) bytes)")
-
+      
         let request = InferenceRequest(
             width: Int(resizedImage.size.width),
             height: Int(resizedImage.size.height),
@@ -177,10 +183,15 @@ actor Networking {
 
     func checkPixelateCost(_ image: UIImage) async throws -> Double {
         // Resize image to fit within API limits (max 256x256)
-        let resizedImage = imageUtils.resizeImage(image, maxDimension: 256)
+        let resizedImage = await Task.detached(priority: .userInitiated) {
+            ImageUtils().resizeImage(image, maxDimension: 256)
+        }.value
 
         // Convert UIImage to base64 RGB (no transparency)
-        guard let base64Image = imageUtils.imageToBase64RGB(resizedImage) else {
+        let base64Image = await Task.detached(priority: .utility) {
+            ImageUtils().imageToBase64RGB(resizedImage)
+        }.value
+        guard let base64Image else {
             throw NetworkingError.imageConversionFailed
         }
 
